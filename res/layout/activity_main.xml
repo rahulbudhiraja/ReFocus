@@ -1,0 +1,52 @@
+ <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" 
+    android:background="@color/Black">
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="0dp"
+        android:paddingBottom="0dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:paddingTop="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_margin="0dp"
+        android:src="@drawable/placeholder2" />
+    	
+      <ImageButton
+          android:id="@+id/shutterButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_alignParentRight="true"
+          android:layout_alignParentTop="true"
+          android:src="@drawable/cameraicon2" />
+
+      <com.facebook.widget.LoginButton
+          android:id="@+id/login_button"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_alignParentBottom="true"
+          android:layout_alignParentRight="true" />
+
+      <com.facebook.widget.ProfilePictureView
+          android:id="@+id/profilePicture"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_above="@+id/postpic"
+          android:layout_alignParentRight="true"
+          android:layout_marginBottom="17dp"
+          android:gravity="center_horizontal" >
+      </com.facebook.widget.ProfilePictureView>
+
+      <Button
+          android:id="@+id/postpic"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_alignParentBottom="true"
+          android:layout_alignParentLeft="true"
+          android:text="Post Pic" />
+
+</RelativeLayout>
