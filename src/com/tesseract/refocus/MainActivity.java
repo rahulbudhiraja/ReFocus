@@ -282,17 +282,18 @@ public class MainActivity extends FragmentActivity {
 	 			{
 	 				
 	 				// Image has been clicked already,so u should not be able to touch the ImageView again ..
-	 				isImageClicked=false;
+	 				//isImageClicked=false;
 	 				
 	 				Log.d(TAG,"X ="+(event.getRawX()-mImageView.getLeft())+"  Y= "+(event.getRawY()-mImageView.getTop())); // For landscape orientation,i.e max val of x is 800 and y max value is 480 ..
 
 	 				
 	 				
-	 				// Pass these to the JNI function
+	 				// Pass these to the JNI function .. These will be the touch positions out of 500x500 .
 	 				converted_xcoord=(event.getRawX()-mImageView.getLeft());
 	 				converted_ycoord=(event.getRawY()-mImageView.getTop());
 	 				
 	 				
+	 				// These will be the corresponding touch positions for the original image i.e touch positions in 500x500 are converted into 640x720 ..
 	 				converted_xcoord=(converted_xcoord/mImageView.getWidth())*640;
 	 				converted_ycoord=(converted_ycoord/mImageView.getHeight())*720;
 	 				// 
@@ -332,6 +333,7 @@ public class MainActivity extends FragmentActivity {
     	
         @Override
         protected String doInBackground(String... params) {
+        	
         	// getDisparity(mRgba.getNativeObjAddr(), finalImage.getNativeObjAddr(), (int)converted_xcoord, (int)converted_ycoord);
 // Commenting out for now ..
               return "";
@@ -348,7 +350,8 @@ public class MainActivity extends FragmentActivity {
 	    	 Log.d("Cols", colVal);
 	    	 Highgui.imwrite(imgFile.getAbsolutePath(), finalImage);
 	    	 myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-		     mImageView.setImageBitmap(myBitmap);
+	    	 
+		   //  mImageView.setImageBitmap(myBitmap);
 		    
 		       Log.d("done","done");
              
