@@ -31,22 +31,22 @@
           android:layout_alignParentBottom="true"
           android:layout_alignParentRight="true" />
 
-      <com.facebook.widget.ProfilePictureView
-          android:id="@+id/profilePicture"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_above="@+id/postpic"
-          android:layout_alignParentRight="true"
-          android:layout_marginBottom="17dp"
-          android:gravity="center_horizontal" >
-      </com.facebook.widget.ProfilePictureView>
-
       <Button
           android:id="@+id/postpic"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:layout_alignParentBottom="true"
-          android:layout_alignParentLeft="true"
+          android:layout_above="@+id/login_button"
+          android:layout_alignLeft="@+id/login_button"
+          android:layout_marginBottom="73dp"
           android:text="Post Pic" />
+
+      <com.facebook.widget.ProfilePictureView
+          android:id="@+id/profilePicture"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_alignParentRight="true"
+          android:layout_alignTop="@+id/postpic"
+          android:gravity="center_horizontal" >
+      </com.facebook.widget.ProfilePictureView>
 
 </RelativeLayout>
