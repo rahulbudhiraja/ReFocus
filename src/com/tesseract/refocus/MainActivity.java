@@ -12,16 +12,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-
-
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageInfo;
@@ -50,6 +51,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.graphics.PorterDuff;
+import android.hardware.Camera;
 
 import android.view.Display;
 import android.view.View;
@@ -86,6 +88,7 @@ import com.facebook.widget.ProfilePictureView;
 
 public class MainActivity extends FragmentActivity {
 
+		CustomFileObserver fileObserver;
 		ImageButton shutterButton;
 		Bitmap mImageBitmap;
 		ImageView mImageView;
@@ -93,8 +96,7 @@ public class MainActivity extends FragmentActivity {
 		
 		private Mat disp;
 		private Mat finalImage;
-		private Mat limg;
-		
+		private Mat limg;		
 	
 		String TAG="SimpleImageCapture";
 		private File imgFile;
@@ -127,7 +129,7 @@ public class MainActivity extends FragmentActivity {
 	    private Canvas canvas;
 	    Paint paint;
 	   
-	    static int currentMode=1;
+	    static int currentMode=1,i=0;
 
 	    private enum PendingAction {
 	        NONE,
@@ -158,6 +160,7 @@ public class MainActivity extends FragmentActivity {
 		oilpaintButton=(Button)findViewById(R.id.oilpaintingbutton);
 		grayButton=(Button)findViewById(R.id.GrayImg);
 		sepiaButton=(Button)findViewById(R.id.SepiaBut);
+		fileObserver=new CustomFileObserver(this);
 		
 		refocusButton.setOnClickListener((android.view.View.OnClickListener) new ButtonClickListener());
 		oilpaintButton.setOnClickListener((android.view.View.OnClickListener) new ButtonClickListener());
@@ -171,10 +174,12 @@ public class MainActivity extends FragmentActivity {
 		paint.setColor(Color.RED);
 		paint.setAntiAlias(true);
 		
+Log.d(TAG,Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/");
+		 
 		
-	
+//		shutterButton.setOnClickListener((android.view.View.OnClickListener) new MyOnClickListener());
+		shutterButton.setOnClickListener((android.view.View.OnClickListener)new LaunchCameraAppListener()); 
 		
-		shutterButton.setOnClickListener((android.view.View.OnClickListener) new MyOnClickListener());
 		mImageView.setOnTouchListener(new TouchListener());
 		
 		profilePictureView = (ProfilePictureView) findViewById(R.id.profilePicture);
@@ -214,10 +219,187 @@ public class MainActivity extends FragmentActivity {
         });
         
     	
-	  
+        
         
 	}
 	
+
+	private void initializeFileObserver() 
+	{
+		
+		 FileObserver observer = new FileObserver(android.os.Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/") { // set up a file observer to watch this directory on sd card
+	            @SuppressWarnings("deprecation")
+				@Override
+	        public void onEvent(int event, String file) {
+	            	Log.d("fired","fired"+" Event:"+event);
+	            	
+	            	PackageManager pm = getBaseContext().getPackageManager();
+	            	
+	            if(event == FileObserver.CLOSE_WRITE && !file.equals(".probe")){ // check if its a "create" and not equal to .probe because thats created every time camera is launched
+	            	{
+	            		Log.d("fds", "File created [" + android.os.Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/" + file + "]");
+	            	i++;
+	            	Log.d("i value","i ="+i);
+	            	try
+	                {
+	                       
+	                  //int t=splitmpointojpg(Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/" + file);
+	                  
+	                  String jpsfilename=Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/" + file;
+	                  String jpgfilename=jpsfilename.substring(0,jpsfilename.length()-1)+"g";
+	                  
+	                  Log.d("File name","name "+jpsfilename);
+	                  
+	                  File from      = new File("",jpsfilename);
+	                  File to        = new File("",jpgfilename);
+	                  from.renameTo(to);
+	                             
+	                  Log.i("From path is", from.toString());
+	                  Log.i("To path is", to.toString());
+	                  
+	                  BitmapFactory.Options option = new BitmapFactory.Options();
+	                  option.inSampleSize =2;
+	                  option.inScaled = true;
+	                  
+	                  Bitmap fullsize_bitmap=BitmapFactory.decodeFile(jpgfilename,option);
+	                                    
+	                  Bitmap left_img=Bitmap.createBitmap(fullsize_bitmap, 0,0,fullsize_bitmap.getWidth()/2,fullsize_bitmap.getHeight());
+	                
+	                  Bitmap right_img=Bitmap.createBitmap(fullsize_bitmap,fullsize_bitmap.getWidth()/2,0,fullsize_bitmap.getWidth()/2,fullsize_bitmap.getHeight());
+	                  
+	                  OutputStream outputStream,outputStream2;
+	                  
+	          		try {
+	          			outputStream = new FileOutputStream ( Environment.getExternalStorageDirectory().getPath()+"/SimpleImageCapture/img_left.jpg");
+	          	        left_img.compress(CompressFormat.JPEG, 100, outputStream);
+	          		
+	          		  outputStream2 = new FileOutputStream ( Environment.getExternalStorageDirectory().getPath()+"/SimpleImageCapture/img_right.jpg");
+	          		right_img.compress(CompressFormat.JPEG, 100, outputStream2);
+	        		
+	          		
+	            	} catch (FileNotFoundException e) {
+	        			// TODO Auto-generated catch block
+	        			e.printStackTrace();
+	        		} catch (IOException e) {
+	        			// TODO Auto-generated catch block
+	        			e.printStackTrace();
+	        		} 
+	                  
+	                  Log.d("yp", "blah");
+	                  
+	                  
+	          		 Intent it = pm.getLaunchIntentForPackage("com.tesseract.refocus");
+ 
+	                 
+	                 
+		               
+		               if (null != it)
+		             	  getBaseContext().startActivity(it);
+		               
+	                }
+
+	                catch (ActivityNotFoundException e)
+	                {//oops, no such application
+	                }
+	          
+	            	
+	            	}// fileSaved = "New photo Saved: " + file;
+	            }
+	        }
+	    };
+	    
+	    observer.startWatching(); // start the observer
+		
+		
+	}
+	
+	public void onStart()
+	{
+		super.onStart();
+		FileObserver observer = new FileObserver(Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/") { // set up a file observer to watch this directory on sd card
+	          
+	        public void onEvent(int event, String file) {
+	            	Log.d("fired","fired"+" Event:"+event);
+	            	
+	            	PackageManager pm = getBaseContext().getPackageManager();
+	            	
+	            if(event == FileObserver.CLOSE_WRITE && !file.equals(".probe")){ // check if its a "create" and not equal to .probe because thats created every time camera is launched
+	            	{
+	            		Log.d("fds", "File created [" + android.os.Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/" + file + "]");
+	            	i++;
+	            	Log.d("i value","i ="+i);
+	            	try
+	                { 
+	                       
+	                  //int t=splitmpointojpg(Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/" + file);
+	                  
+	                  String jpsfilename=Environment.getExternalStorageDirectory().toString() + "/DCIM/100MEDIA/" + file;
+	                  String jpgfilename=jpsfilename.substring(0,jpsfilename.length()-1)+"g";
+	                  
+	                  Log.d("File name","name "+jpsfilename);
+	                  
+	                  File from      = new File("",jpsfilename);
+	                  File to        = new File("",jpgfilename);
+	                  from.renameTo(to);
+	                             
+	                  Log.i("From path is", from.toString());
+	                  Log.i("To path is", to.toString());
+	                  
+	                  BitmapFactory.Options option = new BitmapFactory.Options();
+	                  option.inSampleSize =2;
+	                  option.inScaled = true;
+	                  
+	                  Bitmap fullsize_bitmap=BitmapFactory.decodeFile(jpgfilename,option);
+	                                    
+	                  Bitmap left_img=Bitmap.createBitmap(fullsize_bitmap, 0,0,fullsize_bitmap.getWidth()/2,fullsize_bitmap.getHeight());
+	                
+	                  Bitmap right_img=Bitmap.createBitmap(fullsize_bitmap,fullsize_bitmap.getWidth()/2,0,fullsize_bitmap.getWidth()/2,fullsize_bitmap.getHeight());
+	                  
+	                  OutputStream outputStream,outputStream2;
+	                  
+	          		try {
+	          			outputStream = new FileOutputStream ( Environment.getExternalStorageDirectory().getPath()+"/SimpleImageCapture/img_left.jpg");
+	          	        left_img.compress(CompressFormat.JPEG, 100, outputStream);
+	          		
+	          		  outputStream2 = new FileOutputStream ( Environment.getExternalStorageDirectory().getPath()+"/SimpleImageCapture/img_right.jpg");
+	          		right_img.compress(CompressFormat.JPEG, 100, outputStream2);
+	        		
+	          		
+	            	} catch (FileNotFoundException e) {
+	        			// TODO Auto-generated catch block
+	        			e.printStackTrace();
+	        		} catch (IOException e) {
+	        			// TODO Auto-generated catch block
+	        			e.printStackTrace();
+	        		} 
+	                  
+	                  Log.d("yp", "blah");
+	                  
+	                  
+	          		 Intent it = pm.getLaunchIntentForPackage("com.tesseract.refocus");
+
+	                 
+	                 
+		               
+		               if (null != it)
+		             	  getBaseContext().startActivity(it);
+		               
+	                }
+
+	                catch (ActivityNotFoundException e)
+	                {//oops, no such application
+	                }
+	          
+	            	
+	            	}// fileSaved = "New photo Saved: " + file;
+	            }
+	        }
+	    };
+	    
+	    observer.startWatching(); // start the observer
+
+	}
+
 
 	private Bitmap addCircles(Bitmap bmp,float x,float y) {
 	    
@@ -324,6 +506,42 @@ public class MainActivity extends FragmentActivity {
 			
 			}
 		     };
+		
+class LaunchCameraAppListener implements View.OnClickListener
+		     {
+
+			        @Override
+			        public void onClick(View v) {
+			        	String packageName = "com.android.camera"; //Or whatever package should be launched
+
+			        	if(packageName.equals("com.android.camera")){ //Camera
+			        	    try
+			        	    {
+			        	       
+			        	    	Intent intent = getPackageManager().getLaunchIntentForPackage("com.android.camera");
+
+			        	    	intent.putExtra("android.intent.extras.CAMERA_FACING", 2);
+			        	    	intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+			        	        Log.d("Test","num"+Camera.getNumberOfCameras());
+			        	        startActivity(intent);
+
+			        	    }
+			        	    catch(ActivityNotFoundException e){
+			        	        Intent intent = new Intent();
+			        	        ComponentName comp = new ComponentName("com.android.camera", "com.android.camera.CameraEntry");
+			        	        intent.setComponent(comp);
+			        	        startActivity(intent);
+			        	    }
+			        	}
+			        	else{ //Any other
+			        	    Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
+			        	    startActivity(intent);
+			        	}
+			        }
+			   
+			}
+		     
+		     
 	
 		     class ButtonClickListener implements View.OnClickListener{
 

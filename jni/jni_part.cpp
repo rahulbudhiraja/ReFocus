@@ -97,7 +97,14 @@ JNIEXPORT void JNICALL Java_com_tesseract_refocus_MainActivity_getThreshold(JNIE
     Mat newDisp;
     disp.copyTo(newDisp);
 
-    doMultiBlur(newImg1, finImg, newDisp, point1);
+    if(currentMode == 1)
+     {
+         doMultiBlur(newImg1, finImg, newDisp, point1);
+     }
+     else
+     {
+     	doGraySingle(newImg1, finImg, newDisp, point1);
+     }
 
     //Mat newDisp(disp, Rect(70, 100, 500, 500));
     //doMultiBlur(newImg1, finImg, newDisp, point1);
