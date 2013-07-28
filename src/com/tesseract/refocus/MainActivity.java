@@ -90,7 +90,12 @@ public class MainActivity extends FragmentActivity {
 		Bitmap mImageBitmap;
 		ImageView mImageView;
 		private Mat mRgba;
+		
+		private Mat disp;
 		private Mat finalImage;
+		private Mat limg;
+		
+	
 		String TAG="SimpleImageCapture";
 		private File imgFile;
 		private Bitmap myBitmap;
@@ -102,11 +107,12 @@ public class MainActivity extends FragmentActivity {
 		float converted_xcoord,converted_ycoord;
 		File leftimgFile;
 	
-		Bitmap imageViewBitmap;
+		Bitmap imageViewBitmap,backupBitmap;
 			
 		List<String> fileList = new ArrayList<String>();
 		
 		private Button postPhotoButton;
+		private Button refocusButton,oilpaintButton,grayButton,sepiaButton;
 		
 		//// Facebook Variables .
 		private static final List<String> PERMISSIONS = Arrays.asList("publish_actions");
@@ -117,7 +123,11 @@ public class MainActivity extends FragmentActivity {
 	    private GraphUser user;
 	    private LoginButton loginButton;
 	    private ProfilePictureView profilePictureView;
+	    
+	    private Canvas canvas;
+	    Paint paint;
 	   
+	    static int currentMode=1;
 
 	    private enum PendingAction {
 	        NONE,
@@ -143,6 +153,24 @@ public class MainActivity extends FragmentActivity {
 		
 		shutterButton=(ImageButton) findViewById(R.id.shutterButton);
 		mImageView=(ImageView) findViewById(R.id.imageView1);
+		
+		refocusButton=(Button)findViewById(R.id.refocusbutton);
+		oilpaintButton=(Button)findViewById(R.id.oilpaintingbutton);
+		grayButton=(Button)findViewById(R.id.GrayImg);
+		sepiaButton=(Button)findViewById(R.id.SepiaBut);
+		
+		refocusButton.setOnClickListener((android.view.View.OnClickListener) new ButtonClickListener());
+		oilpaintButton.setOnClickListener((android.view.View.OnClickListener) new ButtonClickListener());
+		grayButton.setOnClickListener((android.view.View.OnClickListener) new ButtonClickListener());
+		sepiaButton.setOnClickListener((android.view.View.OnClickListener) new ButtonClickListener());
+		canvas=new Canvas();
+		
+		paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		paint.setStyle(Paint.Style.STROKE);
+		paint.setStrokeWidth(5);
+		paint.setColor(Color.RED);
+		paint.setAntiAlias(true);
+		
 		
 	
 		
@@ -190,6 +218,25 @@ public class MainActivity extends FragmentActivity {
         
 	}
 	
+
+	private Bitmap addCircles(Bitmap bmp,float x,float y) {
+	    
+		Bitmap tempBitmap=Bitmap.createScaledBitmap(bmp, bmp.getWidth(),bmp.getHeight(), true);
+	    Canvas canvas = new Canvas(tempBitmap);
+//	    Paint bp= new Paint();
+//	    bp.setColor(Color.WHITE);//set a color
+//	    bp.setStrokeWidth(5);// set your stroke width
+//	    
+	    canvas.drawBitmap(tempBitmap, 0, 0, new Paint());
+	    
+	    canvas.drawCircle(x, y, 20, paint);
+	    canvas.drawCircle(x, y, 40, paint);
+	    canvas.drawCircle(x, y, 60, paint);
+	    
+	 //   canvas.drawBitmap(bmp, rect, rect, paint);
+	    
+	    return tempBitmap;
+	}
 	
 
 	@Override
@@ -241,19 +288,28 @@ public class MainActivity extends FragmentActivity {
 	        {
 	        	loading_progress=0;
 	        	// @Jay : Change this to part to full_URI
+	           	// @Jay : Change this to part to full_URI
 		    	imgFile = new  File((String) data.getExtras().get("full_URI"));
 		    	leftimgFile = new File((String) data.getExtras().get("left_URI"));
 		    	Log.d("full_URI","url="+imgFile);
-		    	
-		    	isImageClicked=true;
-		    	
+		    	mRgba = new Mat();
+		    	disp = new Mat();
+		    	limg = new Mat();
+		    	mRgba = Highgui.imread(imgFile.getAbsolutePath());
+		    	Log.d(TAG, "Image loaded");
+		    	getDisparity(mRgba.getNativeObjAddr(), disp.getNativeObjAddr());
+		    	crop5(mRgba.getNativeObjAddr(), limg.getNativeObjAddr());
+		    	Log.d(TAG, "Got Disparity");
+		    	Highgui.imwrite(leftimgFile.getAbsolutePath(), limg);
 		    	if(imgFile.exists())
 		    	{
 			    	myBitmap = BitmapFactory.decodeFile(leftimgFile.getAbsolutePath());
-			    	imageViewBitmap = Bitmap.createScaledBitmap(myBitmap, mImageView.getWidth(),mImageView.getHeight(), true);
-				    mImageView.setImageBitmap(imageViewBitmap);
-				
+				   imageViewBitmap=myBitmap;
+			    	mImageView.setImageBitmap(myBitmap);
+
 			    }
+		    	
+		    	isImageClicked=true;
 	        }
 	    }
 	}
@@ -269,6 +325,48 @@ public class MainActivity extends FragmentActivity {
 			}
 		     };
 	
+		     class ButtonClickListener implements View.OnClickListener{
+
+					public void onClick(View v) {
+//						refocusButton.getBackground().setAlpha(1);
+//						oilpaintButton.getBackground().setAlpha(1);
+//						grayButton.getBackground().setAlpha(1);
+						
+						 refocusButton.getBackground().clearColorFilter();
+						 oilpaintButton.getBackground().clearColorFilter();
+						 grayButton.getBackground().clearColorFilter();
+						 sepiaButton.getBackground().clearColorFilter();
+						 
+						 refocusButton.invalidate();
+						 oilpaintButton.invalidate();
+						 grayButton.invalidate();
+						 sepiaButton.invalidate();
+						 
+					 if(v.getId()==refocusButton.getId())
+						   {Log.d(TAG,"Filter "+1);
+						   refocusButton.getBackground().setColorFilter(0xFFFF0000,PorterDuff.Mode.MULTIPLY);
+						   currentMode=1;
+						   }
+					   else if(v.getId()==oilpaintButton.getId())
+					   { Log.d(TAG,"Filter "+2);
+					   currentMode=2;
+						   }
+					   else   if(v.getId()==grayButton.getId())
+					   { Log.d(TAG,"Filter "+3);
+						   grayButton.getBackground().setColorFilter(0xFFFF0000,PorterDuff.Mode.MULTIPLY);
+						   currentMode=3;
+						   }
+					   else   if(v.getId()==sepiaButton.getId())
+					   { Log.d(TAG,"Filter "+4);
+						   sepiaButton.getBackground().setColorFilter(0xFFFF0000,PorterDuff.Mode.MULTIPLY);
+						   currentMode=4;
+						   }
+					
+					
+					
+				
+					}
+				     };
 
     
 
@@ -292,27 +390,20 @@ public class MainActivity extends FragmentActivity {
 	 				converted_xcoord=(event.getRawX()-mImageView.getLeft());
 	 				converted_ycoord=(event.getRawY()-mImageView.getTop());
 	 				
+	 				backupBitmap=((BitmapDrawable)mImageView.getDrawable()).getBitmap();
 	 				
+	 				mImageView.setImageBitmap(  addCircles( ((BitmapDrawable)mImageView.getDrawable()).getBitmap(),converted_xcoord,converted_ycoord));
+	 				
+	 				imageViewBitmap=backupBitmap;
+//	 				
 	 				// These will be the corresponding touch positions for the original image i.e touch positions in 500x500 are converted into 640x720 ..
-	 				converted_xcoord=(converted_xcoord/mImageView.getWidth())*640;
-	 				converted_ycoord=(converted_ycoord/mImageView.getHeight())*720;
-	 				// 
-	 				
-	 				
-	 				Log.d(TAG, "converted");
-	 				mRgba = new Mat();
-			    	finalImage = new Mat();
-				    	
-			    	Log.d(TAG,"Initialized Mat");
-			    	Log.d(TAG,"progress"+loading_progress);
-			    	
-			    	mRgba = Highgui.imread(imgFile.getAbsolutePath());
-			    
-			    	Log.d(TAG, "Image loaded");
-			    	
-			    	//mRgba = Highgui.imread(filename);
-			    	
-			    	
+	 				 converted_xcoord=(converted_xcoord/mImageView.getWidth())*500;
+	 		           converted_ycoord=(converted_ycoord/mImageView.getHeight())*500;
+	 		           Log.d(TAG, String.valueOf(converted_ycoord));
+	 		           Log.d(TAG, String.valueOf(converted_xcoord));
+	 		           Log.d(TAG, "converted");
+	 		            finalImage = new Mat();
+	 		          
 				    new ComputeDisparity().execute("");
 				   
 	 			}
@@ -336,21 +427,28 @@ public class MainActivity extends FragmentActivity {
         	
         	// getDisparity(mRgba.getNativeObjAddr(), finalImage.getNativeObjAddr(), (int)converted_xcoord, (int)converted_ycoord);
 // Commenting out for now ..
+        	
+        	   getThreshold(mRgba.getNativeObjAddr(), disp.getNativeObjAddr(), finalImage.getNativeObjAddr(), (int)converted_xcoord, (int)converted_ycoord,currentMode);
+	           
+	    	
               return "";
         }      
 
         @Override
         protected void onPostExecute(String result) {
            
-             progress.dismiss();
+            // progress.dismiss();
              
              Log.d(TAG,"blah");
              
              String colVal = String.valueOf(finalImage.cols());
-	    	 Log.d("Cols", colVal);
-	    	 Highgui.imwrite(imgFile.getAbsolutePath(), finalImage);
-	    	 myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-	    	 
+	            Log.d("Cols", colVal);
+	            Highgui.imwrite(leftimgFile.getAbsolutePath(), finalImage);
+	            myBitmap = BitmapFactory.decodeFile(leftimgFile.getAbsolutePath());
+	            imageViewBitmap=myBitmap;
+	            mImageView.setImageBitmap(imageViewBitmap);
+	            System.gc();
+	    	  
 		   //  mImageView.setImageBitmap(myBitmap);
 		    
 		       Log.d("done","done");
@@ -362,9 +460,9 @@ public class MainActivity extends FragmentActivity {
 
         @Override
         protected void onPreExecute() {
-        	   progress.setTitle("Processing Image");
-               progress.setMessage("Please wait while we process your image ...");
-               progress.show();
+//        	   progress.setTitle("Processing Image");
+//               progress.setMessage("Please wait while we process your image ...");
+//               progress.show();
         }
 
         @Override
@@ -492,7 +590,10 @@ public class MainActivity extends FragmentActivity {
 
     }
     
-    
+    public native void getDisparity(long matAddrRgba, long matAddrfinalImage);
+    public native void crop5(long matAddrRgba, long matAddrfinalImage);
+    public native void getThreshold(long matAddrRgba, long matAddrDisp, long matAddrfinalImage, int ji1, int ji2,int choice);
+	
     
     
     

@@ -319,8 +319,8 @@ private Runnable Timer_Tick = new Runnable() {
 			
 
 			camera.setParameters(parameters);
-			parameters.set("rawsave-mode", "1");
-			parameters.set("rawfname", Environment.getExternalStorageDirectory().getPath()+"test.raw");
+			//parameters.set("rawsave-mode", "1");
+			//parameters.set("rawfname", Environment.getExternalStorageDirectory().getPath()+"test.raw");
 			camera.startPreview();
 			
 			   Log.d(TAG,"Get number of cameras" + parameters.getSupportedPictureFormats());
@@ -611,6 +611,6 @@ private Runnable Timer_Tick = new Runnable() {
 		      Log.d(TAG, "onPictureTaken - jpeg");
 		    }
 		  };
-	public native void getDisparity(long matAddrRgba, long matAddrfinalImage);
+		  
 	
 }
