@@ -72,7 +72,7 @@ Log.d("com.tesseract.refocus","Initializing");
 
 							Bitmap right_img=Bitmap.createBitmap(fullsize_bitmap,fullsize_bitmap.getWidth()/2,0,fullsize_bitmap.getWidth()/2,fullsize_bitmap.getHeight());
 
-							OutputStream outputStream,outputStream2;
+							OutputStream outputStream,outputStream2,outputStreamFull;
 
 							try {
 								outputStream = new FileOutputStream ( Environment.getExternalStorageDirectory().getPath()+"/SimpleImageCapture/img_left.jpg");
@@ -80,7 +80,11 @@ Log.d("com.tesseract.refocus","Initializing");
 
 								outputStream2 = new FileOutputStream ( Environment.getExternalStorageDirectory().getPath()+"/SimpleImageCapture/img_right.jpg");
 								right_img.compress(CompressFormat.JPEG, 100, outputStream2);
-
+								
+								outputStreamFull = new FileOutputStream ( Environment.getExternalStorageDirectory().getPath()+"/SimpleImageCapture/img_full.jpg");
+								fullsize_bitmap.compress(CompressFormat.JPEG, 100, outputStreamFull);
+							
+								
 
 							} catch (FileNotFoundException e) {
 								// TODO Auto-generated catch block
